@@ -1,0 +1,45 @@
+@{
+    // Retrieve the full name from ViewBag
+    var fullName = ViewBag.FullName as string;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Main Menu</title>
+    <style>
+        /* Center the text horizontally and vertically */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* Style for the welcome message */
+        .welcome-message {
+            font-size: 24px; /* Increase the font size */
+            text-align: center; /* Center the text horizontally */
+        }
+    </style>
+</head>
+<body>
+
+@if (User.Identity.IsAuthenticated)
+{
+    <p class="welcome-message">Welcome,  @fullName!</p>
+}
+else
+{
+    <p class="welcome-message">Welcome, Guest!</p>
+}
+
+<!-- Example logout link -->
+<a href="@Url.Action("Logout", "Home")">Logout</a>
+
+<!-- Add your JavaScript links here -->
+
+</body>
+</html>
