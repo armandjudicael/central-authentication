@@ -37,3 +37,4 @@ C:\Users\jratombo\RiderProjects\WinAuthMVC\WinAuthMVC\obj\Release\net8.0\refint\
 C:\Users\jratombo\RiderProjects\WinAuthMVC\WinAuthMVC\obj\Release\net8.0\WinAuthMVC.pdb
 C:\Users\jratombo\RiderProjects\WinAuthMVC\WinAuthMVC\obj\Release\net8.0\WinAuthMVC.genruntimeconfig.cache
 C:\Users\jratombo\RiderProjects\WinAuthMVC\WinAuthMVC\obj\Release\net8.0\ref\WinAuthMVC.dll
+C:\Users\jratombo\RiderProjects\WinAuthMVC\WinAuthMVC\bin\Release\net8.0\Novell.Directory.Ldap.dll

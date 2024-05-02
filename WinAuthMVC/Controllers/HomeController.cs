@@ -4,156 +4,156 @@ using Microsoft.AspNetCore.Mvc;
 using WinAuthMVC.Models;
 using System.DirectoryServices.Protocols;
 using System.Net;
+using WinAuthMVC.Services;
+
 namespace WinAuthMVC.Controllers;
+
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
+    private readonly LoginSessionDAO _loginSessionDAO;
+    private readonly AppDAO _appDao;
     
-    
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(ILogger<HomeController> logger,LoginSessionDAO loginSessionDAO,AppDAO appDao)
     {
         _logger = logger;
+        _loginSessionDAO = loginSessionDAO;
+        _appDao = appDao;
     }
-    public IActionResult Index()
+    public string GetSubstringAfterBackslash(string input)
     {
-        var userName = HttpContext.Session.GetString("UserName");
-        var identityName = @User.Identity.Name;
-        if (string.IsNullOrEmpty(userName))
+        int backslashIndex = input.IndexOf('\\');
+
+        if (backslashIndex != -1 && backslashIndex + 1 < input.Length)
         {
-            _logger.LogInformation(userName+" doesn't exist or session is expired  ");
-            // Session expired or user not logged in, redirect to login page
-            return RedirectToAction("Login", "Home");
+            return input.Substring(backslashIndex + 1);
+        }
+        else
+        {
+            throw new ArgumentException("No substring found after '\\'.");
+        }
+    }
+    public IActionResult Index(string app = "default", string login = "default")
+    {
+        var identityName = @User.Identity.Name;
+        var extractedLogin =  GetSubstringAfterBackslash(identityName);
+        // Check if login already exists
+        bool loginExists = _loginSessionDAO.DoesLoginExist(extractedLogin);
+        var fullName = GetFullName(GetSubstringAfterBackslash(identityName));
+        
+        if (!loginExists)
+        {
+            var loginSession = new LoginSession
+            {
+                id = Guid.NewGuid().ToString(), // Generate a unique identifier
+                login = extractedLogin,
+                _DateTime = DateTime.Now,
+                username= fullName,
+                IsActive = 1,
+                app = app
+            };
+            // Call the CreateLoginSession method to insert the login session into the database
+           _loginSessionDAO.CreateLoginSession(loginSession);
         }
         
-        _logger.LogInformation(" User :  "+identityName);
+        // Store the full name in ViewBag
+        ViewBag.FullName = fullName;
+        ViewBag.App = app;
 
+       var url = _appDao.GetUrl(app);
+       if (!String.IsNullOrEmpty(url))
+       {
+           // Redirect to the URL in a new tab using JavaScript
+           ViewBag.RedirectUrl = url;  
+       }
         // Session is active, proceed to MainMenu view
         return View("MainMenu");
     }
-    
-
     public bool Authenticate(string login, string pwd)
     {
         var identifier = new LdapDirectoryIdentifier("MGPADDC", 389);
-        var credential = new NetworkCredential("iflowadmin", "wfpassword");
+        var credential = new NetworkCredential("iflowadmin", "wfpassword","toamasina");
         try
         {
             using (var connection = new LdapConnection(identifier,credential,AuthType.Basic))
             {
+                connection.SessionOptions.ProtocolVersion = 3; // Set LDAP protocol version
+                _logger.LogInformation(" --- START BINDING ----");
                 connection.Bind(new NetworkCredential(login,pwd,"toamasina"));
-                
-                SearchRequest searchRequest = new SearchRequest(
-                    "dc=toamasina,dc=local",
-                    $"(&(objectclass=person)(sAMAccountName={login}))",
-                    SearchScope.Subtree
-                );
-                
-                SearchResponse searchResponse = (SearchResponse)connection.SendRequest(searchRequest);
-                if (searchResponse.Entries.Count > 0)
-                {
-                    SearchResultEntry entry = searchResponse.Entries[0];
-                    // Retrieve the full name from the directory entry
-                    var fullName = entry.Attributes["displayName"]?.GetValues(typeof(string))[0]?.ToString();
-                    if (string.IsNullOrEmpty(fullName))
-                    {
-                        // If displayName is not available, try getting common name (cn)
-                        fullName = entry.Attributes["cn"]?.GetValues(typeof(string))[0]?.ToString();
-                    }
-                    _logger.LogInformation(" Full name : "+fullName);
-                }
+                _logger.LogInformation(" --- BINDING FINISH ----");
                 return true;
             }
         }
         catch (Exception e)
         {
-            Console.WriteLine("LDAP authentication error: " + e.Message);
+            _logger.LogError("LDAP authentication error: " + e.Message);
             return false;
         }
     }
-    
-    public string GetFullName(string username)
+  public string GetFullName(string username)
+{
+    try
     {
-        try
+        var identifier = new LdapDirectoryIdentifier("MGPADDC", 389);
+        var credential = new NetworkCredential("iflowadmin", "wfpassword", "toamasina");
+        using (var connection = new LdapConnection(identifier, credential, AuthType.Basic))
         {
-            var identifier = new LdapDirectoryIdentifier("MGPADDC", 389);
-            var credential = new NetworkCredential("iflowadmin", "wfpassword");
-        
-            using (var connection = new LdapConnection(identifier, credential, AuthType.Basic))
+            connection.SessionOptions.ProtocolVersion = 3; // Set LDAP protocol version
+            try
             {
-                connection.Bind();
-                SearchRequest searchRequest = new SearchRequest(
-                    "dc=toamasina,dc=local",
-                    $"(&(objectclass=person)(sAMAccountName={username}))",
-                    SearchScope.Subtree
-                );
-                SearchResponse searchResponse = (SearchResponse)connection.SendRequest(searchRequest);
+                connection.Bind(); // Attempt to bind to LDAP server
+            }
+            catch (LdapException lex)
+            {
+                _logger.LogError(lex, "LDAP binding failed.");
+                return username; // Or throw an exception if necessary
+            }
 
-                if (searchResponse.Entries.Count > 0)
+            var searchFilter = $"(&(objectclass=person)(sAMAccountName={username}))";
+            var searchRequest = new SearchRequest(
+                "dc=toamasina,dc=local",
+                searchFilter,
+                SearchScope.Subtree
+            );
+
+            var response = (SearchResponse)connection.SendRequest(searchRequest); // Send LDAP search request
+
+            if (response.Entries.Count > 0)
+            {
+                var entry = response.Entries[0];
+                var fullName = entry.Attributes["displayName"]?.GetValues(typeof(string))[0]?.ToString();
+                if (string.IsNullOrEmpty(fullName))
                 {
-                    SearchResultEntry entry = searchResponse.Entries[0];
-                    // Retrieve the full name from the directory entry
-                    var fullName = entry.Attributes["displayName"]?.GetValues(typeof(string))[0]?.ToString();
-                    if (string.IsNullOrEmpty(fullName))
-                    {
-                        // If displayName is not available, try getting common name (cn)
-                        fullName = entry.Attributes["cn"]?.GetValues(typeof(string))[0]?.ToString();
-                    }
-                    return fullName;
+                    fullName = entry.Attributes["cn"]?.GetValues(typeof(string))[0]?.ToString();
                 }
-                return null;
+                return fullName ?? "";
+            }
+            else
+            {
+                _logger.LogWarning("No LDAP entry found for username: {Username}", username);
+                return ""; // Consider throwing an exception here instead of returning an empty string
             }
         }
-        catch (LdapException ex)
-        {
-            _logger.LogError(ex, "LDAP authentication error: {Message}", ex.Message);
-            return null;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An unexpected error occurred during LDAP authentication");
-            throw;
-        }
     }
+    catch (LdapException lex)
+    {
+        // Handle LDAP-specific exceptions
+        _logger.LogError(lex, "LDAP error occurred while fetching full name for username: {Username}", username);
+        throw; // Rethrow the exception for higher-level handling if needed
+    }
+    catch (Exception ex)
+    {
+        // Handle other exceptions
+        _logger.LogError(ex, "An error occurred while fetching full name for username: {Username}", username);
+        throw; // Rethrow the exception for higher-level handling if needed
+    }
+}
+
 
     
-    public bool Authenticate1(string username, string password)
-    {
-        _logger.LogInformation("Checking credentials, username = {Username}, password = {Password}", username,
-            password);
-        try
-        {
-            var identifier = new LdapDirectoryIdentifier("MGPADDC", 389);
-            var credential = new NetworkCredential("iflowadmin", "wfpassword");
-            using (var connection = new LdapConnection(identifier,credential,AuthType.Basic))
-            {
-                connection.Bind();
-                SearchRequest searchRequest = new SearchRequest("dc=toamasina,dc=local", $"(&(objectclass=person)(sAMAccountName = {username}))", SearchScope.Subtree);
-                SearchResponse searchResponse = (SearchResponse)connection.SendRequest(searchRequest);
-                if (searchResponse.Entries.Count > 0)
-                {
-                    SearchResultEntry entry = searchResponse.Entries[0];
-                    _logger.LogInformation(entry.ToString());
-                    return true;
-                }
-                return false;
-            }
-        }
-        catch (LdapException ex)
-        {
-            _logger.LogError(ex, "LDAP authentication error: {Message}", ex.Message);
-            return false;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An unexpected error occurred during LDAP authentication");
-            throw;
-        }
-    }
-
     [HttpPost]
     public IActionResult Index(LoginViewModel model)
     {
-        
         if (!ModelState.IsValid)
         {
             return View(model);
@@ -161,16 +161,37 @@ public class HomeController : Controller
         if (Authenticate(model.Username, model.Password))
         {
             // Get the full name of the authenticated user
-            var fullName = "";
-            
+            var fullName = GetFullName(model.Username);
             // Store the full name in ViewBag
             ViewBag.FullName = fullName;
-
-    
             // Store the full name in session or ViewBag for further use
             HttpContext.Session.SetString("FullName", fullName);
-
             // Authentication successful, redirect to main page
+            ViewBag.App = model.App; // Pass the 'app' parameter to the view
+            
+            bool loginExists = _loginSessionDAO.DoesLoginExist(model.Username);
+            if (!loginExists)
+            {
+                var loginSession = new LoginSession
+                {
+                    id = Guid.NewGuid().ToString(), // Generate a unique identifier
+                    login = model.Username,
+                    _DateTime = DateTime.Now,
+                    username= fullName,
+                    IsActive = 1,
+                    app = model.App
+                };
+                // Call the CreateLoginSession method to insert the login session into the database
+                _loginSessionDAO.CreateLoginSession(loginSession);
+            }
+            
+            var url = _appDao.GetUrl(model.App);
+            if (!String.IsNullOrEmpty(url))
+            {
+                // Redirect to the URL in a new tab using JavaScript
+                ViewBag.RedirectUrl = url;  
+            }
+            
             return View("MainMenu");
         }
         else
@@ -182,14 +203,12 @@ public class HomeController : Controller
             return View(model);
         }
     }
-    
-    public IActionResult Login()
-    {       
-        // If authentication successful, store user's name in session
-        HttpContext.Session.SetString("UserName", @User.Identity.Name);
+    public IActionResult Login(string app = "default", string login = "default")
+    {   
+        ViewBag.App = app;
+        ViewBag.Login = login;
         return View("index");
     }
-    
     
     // Logout action method
     public IActionResult Logout()
@@ -202,7 +221,7 @@ public class HomeController : Controller
 
         HttpContext.SignOutAsync();
         
-        return RedirectToAction("Index", "Home"); 
+        return RedirectToAction("Login", "Home"); 
     }
 
     public IActionResult Privacy()

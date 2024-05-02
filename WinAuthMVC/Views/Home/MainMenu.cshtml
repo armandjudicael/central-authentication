@@ -23,23 +23,50 @@
             font-size: 24px; /* Increase the font size */
             text-align: center; /* Center the text horizontally */
         }
+
+        /* Style for the buttons */
+        .button-list {
+            margin-top: 20px; /* Add some space between the welcome message and buttons */
+            text-align: center; /* Center the buttons horizontally */
+        }
+
+        .button-list button {
+            margin: 5px; /* Add margin around each button */
+            font-size: 16px; /* Set font size for buttons */
+        }
     </style>
 </head>
 <body>
+<div class="container">
+    <!-- Display the full name -->
+    @if (!string.IsNullOrEmpty(fullName))
+    {
+        <p class="welcome-message">Welcome, @fullName!</p>
+    }
+    else
+    {
+        <p class="welcome-message">Welcome, Guest!</p>
+    }
 
-@if (User.Identity.IsAuthenticated)
-{
-    <p class="welcome-message">Welcome,  @fullName!</p>
-}
-else
-{
-    <p class="welcome-message">Welcome, Guest!</p>
-}
+    <!-- List of buttons -->
+    <div class="button-list">
+        <button class="btn btn-primary"  >ASACS</button>
+        <button class="btn btn-primary"  >AmbatovyOne</button>
+        <button class="btn btn-primary"  >Iflow</button>
+        <button class="btn btn-primary"  >OTR</button>
+        <button class="btn btn-primary"  >JMP</button>
+        <button class="btn btn-primary"  >MOC</button>
+        <button class="btn btn-primary"  >DAG</button>
+    </div>
 
-<!-- Example logout link -->
-<a href="@Url.Action("Logout", "Home")">Logout</a>
-
-<!-- Add your JavaScript links here -->
-
+    <!-- Example logout link -->
+    <a href="@Url.Action("Logout", "Home")" class="btn btn-danger">Logout</a>
+</div>
+<script>
+    @if (ViewBag.RedirectUrl != null)
+    {
+        <text>window.open("@ViewBag.RedirectUrl", "_blank");</text>
+    }
+</script>
 </body>
 </html>

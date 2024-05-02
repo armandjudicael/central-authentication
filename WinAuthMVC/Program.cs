@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Negotiate;
-using WinAuthMVC;
+using WinAuthMVC.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,10 +9,28 @@ builder.Services.AddDistributedMemoryCache();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSession(options =>
 {
-   options.IdleTimeout = TimeSpan.FromMinutes(5);
+   options.IdleTimeout = TimeSpan.FromHours(1);
    options.Cookie.HttpOnly = true;
    options.Cookie.IsEssential = true;
 });
+
+builder.Services.AddSingleton<MSSQLManager>(provider =>
+{
+    // Retrieve the connection string from configuration
+    var connectionString = builder.Configuration.GetConnectionString("SQLServerConnection");
+    // Resolve an instance of ILogger<OracleDBManager> to pass to the constructor
+    var logger = provider.GetRequiredService<ILogger<MSSQLManager>>();
+    // Create and return an instance of OracleDBManager
+    return new MSSQLManager(connectionString, logger);
+});
+
+
+builder.Services.AddSingleton<LoginSessionDAO>(); // Register LoginSessionDAO as a singleton
+builder.Services.AddSingleton<AppDAO>(); // Register LoginSessionDAO as a singleton
+
+// Add logging
+builder.Services.AddLogging();
+
 
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
     .AddNegotiate();

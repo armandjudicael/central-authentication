@@ -37,4 +37,10 @@ C:\Users\jratombo\RiderProjects\WinAuthMVC\WinAuthMVC\obj\Debug\net8.0\refint\Wi
 C:\Users\jratombo\RiderProjects\WinAuthMVC\WinAuthMVC\obj\Debug\net8.0\WinAuthMVC.pdb
 C:\Users\jratombo\RiderProjects\WinAuthMVC\WinAuthMVC\obj\Debug\net8.0\WinAuthMVC.genruntimeconfig.cache
 C:\Users\jratombo\RiderProjects\WinAuthMVC\WinAuthMVC\obj\Debug\net8.0\ref\WinAuthMVC.dll
-C:\Users\jratombo\RiderProjects\WinAuthMVC\WinAuthMVC\bin\Debug\net8.0\Novell.Directory.Ldap.dll
+C:\Users\jratombo\RiderProjects\WinAuthMVC\WinAuthMVC\bin\Debug\net8.0\Oracle.ManagedDataAccess.dll
+C:\Users\jratombo\RiderProjects\WinAuthMVC\WinAuthMVC\bin\Debug\net8.0\System.Data.SqlClient.dll
+C:\Users\jratombo\RiderProjects\WinAuthMVC\WinAuthMVC\bin\Debug\net8.0\runtimes\win-arm64\native\sni.dll
+C:\Users\jratombo\RiderProjects\WinAuthMVC\WinAuthMVC\bin\Debug\net8.0\runtimes\win-x64\native\sni.dll
+C:\Users\jratombo\RiderProjects\WinAuthMVC\WinAuthMVC\bin\Debug\net8.0\runtimes\win-x86\native\sni.dll
+C:\Users\jratombo\RiderProjects\WinAuthMVC\WinAuthMVC\bin\Debug\net8.0\runtimes\unix\lib\netcoreapp2.1\System.Data.SqlClient.dll
+C:\Users\jratombo\RiderProjects\WinAuthMVC\WinAuthMVC\bin\Debug\net8.0\runtimes\win\lib\netcoreapp2.1\System.Data.SqlClient.dll

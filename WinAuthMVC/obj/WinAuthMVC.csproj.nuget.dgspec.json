@@ -42,9 +42,17 @@
               "target": "Package",
               "version": "[8.0.3, )"
             },
-            "Novell.Directory.Ldap": {
+            "Oracle.ManagedDataAccess": {
               "target": "Package",
-              "version": "[2.2.1, )"
+              "version": "[23.3.3-dev, )"
+            },
+            "System.Data.OracleClient": {
+              "target": "Package",
+              "version": "[1.0.8, )"
+            },
+            "System.Data.SqlClient": {
+              "target": "Package",
+              "version": "[4.8.6, )"
             }
           },
           "imports": [
