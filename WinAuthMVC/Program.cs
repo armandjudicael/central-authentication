@@ -14,14 +14,24 @@ builder.Services.AddSession(options =>
    options.Cookie.IsEssential = true;
 });
 
-builder.Services.AddSingleton<MSSQLManager>(provider =>
+// builder.Services.AddSingleton<MSSQLManager>(provider =>
+// {
+//     // Retrieve the connection string from configuration
+//     var connectionString = builder.Configuration.GetConnectionString("SQLServerConnection");
+//     // Resolve an instance of ILogger<OracleDBManager> to pass to the constructor
+//     var logger = provider.GetRequiredService<ILogger<MSSQLManager>>();
+//     // Create and return an instance of OracleDBManager
+//     return new MSSQLManager(connectionString, logger);
+// });
+
+builder.Services.AddSingleton<OracleDBManager>(provider =>
 {
     // Retrieve the connection string from configuration
-    var connectionString = builder.Configuration.GetConnectionString("SQLServerConnection");
+    var connectionString = builder.Configuration.GetConnectionString("OracleConnection");
     // Resolve an instance of ILogger<OracleDBManager> to pass to the constructor
-    var logger = provider.GetRequiredService<ILogger<MSSQLManager>>();
+    var logger = provider.GetRequiredService<ILogger<OracleDBManager>>();
     // Create and return an instance of OracleDBManager
-    return new MSSQLManager(connectionString, logger);
+    return new OracleDBManager(connectionString, logger);
 });
 
 

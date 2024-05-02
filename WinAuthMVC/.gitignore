@@ -1,37 +1,55 @@
-# Ignore Visual Studio files
+# Visual Studio / Rider / VS Code specific files
 .vs/
-*.vscode/
+.vscode/
+.idea/
 *.suo
 *.user
-*.sln
-*.bak
+*.userprefs
+*.usertasks
 
-# Ignore NuGet packages
+# Compiled output
+bin/
+obj/
+
+# NuGet packages
 *.nuget.props
 *.nuget.targets
-*.lock.json
 project.lock.json
 packages/
 *.sqlite
 
-# Ignore build output
-bin/
-obj/
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
 
-# Ignore ReSharper and Rider directories
-_ReSharper*/
-.idea/
+# .NET Core
+project.fragment.lock.json
+artifacts/
+**/bin
+**/obj
 
-# Ignore user-specific files
-*.userprefs
-*.usertasks
 
-# Ignore log files and exceptions
-*.log
-*.exceptions
+*.userosscache
+*.sln.docstates
 
-# Ignore OS-generated files
-.DS_Store
-Thumbs.db
+
+# Xamarin Studio
+*.pidb
+# Unity generated files
+Temp/
+Library/
+Logs/
+
 # Ignore app settting 
 appsettings.*

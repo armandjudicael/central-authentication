@@ -39,7 +39,7 @@ public class HomeController : Controller
         var extractedLogin =  GetSubstringAfterBackslash(identityName);
         // Check if login already exists
         bool loginExists = _loginSessionDAO.DoesLoginExist(extractedLogin);
-        var fullName = GetFullName(GetSubstringAfterBackslash(identityName));
+        var fullName = GetFullName(extractedLogin);
         
         if (!loginExists)
         {

@@ -1,38 +1,37 @@
 using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
+using System.Data;
+using System.Data.OracleClient;
+using Microsoft.Extensions.Logging;
 using WinAuthMVC.Models;
 
-namespace WinAuthMVC.Services 
+namespace WinAuthMVC.Services
 {
-    public class LoginSessionDAO 
+    public class LoginSessionDAO
     {
-        private readonly MSSQLManager _sqlManager;
         private readonly ILogger<LoginSessionDAO> _logger;
+        private readonly OracleDBManager _oracleManager;
 
-        public LoginSessionDAO(MSSQLManager sqlManager, ILogger<LoginSessionDAO> logger)
+        public LoginSessionDAO(OracleDBManager oracleManager, ILogger<LoginSessionDAO> logger)
         {
-            _sqlManager = sqlManager;
+            _oracleManager = oracleManager;
             _logger = logger;
         }
+
         public bool DoesLoginExist(string login)
         {
             try
             {
-                // Query to check if the login exists
-                string query = "SELECT COUNT(*) FROM T_LOGIN_SESSION WHERE C_LOGIN = @Login";
-                    using (var command = new SqlCommand(query, _sqlManager.GetConnection()))
+                    string query = "SELECT COUNT(*) FROM T_LOGIN_SESSION WHERE C_LOGIN = :Login";
+                    using (var command = new OracleCommand(query, _oracleManager.GetConnection()))
                     {
-                        command.Parameters.AddWithValue("@Login", login);
-                        // Execute the command and get the result
-                        int count = (int)command.ExecuteScalar();
-                        // If count > 0, the login exists; otherwise, it doesn't
+                        command.Parameters.Add(":Login", login);
+                        int count = Convert.ToInt32(command.ExecuteScalar());
                         return count > 0;
                     }
             }
             catch (Exception ex)
             {
-                // Handle exceptions (e.g., logging)
+                _logger.LogError(ex, "Error checking if login exists.");
                 throw new Exception("Error checking if login exists.", ex);
             }
         }
@@ -41,28 +40,23 @@ namespace WinAuthMVC.Services
         {
             try
             {
-                // Query to insert login session into the table
-                string query = @"
-                    INSERT INTO T_LOGIN_SESSION (C_APP,C_ID,C_LOGIN, C_DATE, C_NAME, C_ACTIVE)
-                    VALUES (@C_APP,@C_ID,@C_LOGIN,@C_DATE,@C_NAME,@C_ACTIVE)";
-                
-                    // Create a command object with parameters
-                    using (var command = new SqlCommand(query, _sqlManager.GetConnection()))
+                    string query = @"
+                        INSERT INTO T_LOGIN_SESSION (C_APP, C_ID, C_LOGIN, C_DATE, C_NAME, C_ACTIVE)
+                        VALUES (:C_APP, :C_ID, :C_LOGIN, :C_DATE, :C_NAME, :C_ACTIVE)";
+                    using (var command = new OracleCommand(query, _oracleManager.GetConnection()))
                     {
-                        command.Parameters.AddWithValue("@C_APP", loginSession.app);
-                        command.Parameters.AddWithValue("@C_ID", loginSession.id);
-                        command.Parameters.AddWithValue("@C_LOGIN", loginSession.login);
-                        command.Parameters.AddWithValue("@C_DATE", loginSession._DateTime);
-                        command.Parameters.AddWithValue("@C_NAME", loginSession.username);
-                        command.Parameters.AddWithValue("@C_ACTIVE", loginSession.IsActive);
-
-                        // Execute the command
+                        command.Parameters.Add(":C_APP", loginSession.app);
+                        command.Parameters.Add(":C_ID", loginSession.id);
+                        command.Parameters.Add(":C_LOGIN", loginSession.login);
+                        command.Parameters.Add(":C_DATE", loginSession._DateTime);
+                        command.Parameters.Add(":C_NAME", loginSession.username);
+                        command.Parameters.Add(":C_ACTIVE", loginSession.IsActive);
                         command.ExecuteNonQuery();
                     }
             }
             catch (Exception ex)
             {
-                // Handle exceptions (e.g., logging)
+                _logger.LogError(ex, "Error creating login session.");
                 throw new Exception("Error creating login session.", ex);
             }
         }
@@ -71,26 +65,22 @@ namespace WinAuthMVC.Services
         {
             try
             {
-                // Query to update login session in the table
-                string query = @"
-                    UPDATE T_LOGIN_SESSION 
-                    SET C_DATE = @Date, C_NAME = @Name, C_ACTIVE = @Active 
-                    WHERE C_LOGIN = @Login";
-                
-                using (var command = new SqlCommand(query, _sqlManager.GetConnection()))
-                {
-                    command.Parameters.AddWithValue("@Date", loginSession._DateTime);
-                    command.Parameters.AddWithValue("@Name", loginSession.username);
-                    command.Parameters.AddWithValue("@Active", loginSession.IsActive);
-                    command.Parameters.AddWithValue("@Login", loginSession.login);
-
-                    // Execute the command
-                    command.ExecuteNonQuery();
-                }
+                    string query = @"
+                        UPDATE T_LOGIN_SESSION 
+                        SET C_DATE = :C_DATE, C_NAME = :C_NAME, C_ACTIVE = :C_ACTIVE 
+                        WHERE C_LOGIN = :C_LOGIN";
+                    using (var command = new OracleCommand(query, _oracleManager.GetConnection()))
+                    {
+                        command.Parameters.Add(":C_DATE", loginSession._DateTime);
+                        command.Parameters.Add(":C_NAME", loginSession.username);
+                        command.Parameters.Add(":C_ACTIVE", loginSession.IsActive);
+                        command.Parameters.Add(":C_LOGIN", loginSession.login);
+                        command.ExecuteNonQuery();
+                    }
             }
             catch (Exception ex)
             {
-                // Handle exceptions (e.g., logging)
+                _logger.LogError(ex, "Error updating login session.");
                 throw new Exception("Error updating login session.", ex);
             }
         }
@@ -99,20 +89,16 @@ namespace WinAuthMVC.Services
         {
             try
             {
-                // Query to delete login session from the table
-                string query = "DELETE FROM T_LOGIN_SESSION WHERE C_ID = @Id";
-                
-                using (var command = new SqlCommand(query,_sqlManager.GetConnection()))
-                {
-                    command.Parameters.AddWithValue("@Id", id);
-
-                    // Execute the command
-                    command.ExecuteNonQuery();
-                }
+                    string query = "DELETE FROM T_LOGIN_SESSION WHERE C_ID = :Id";
+                    using (var command = new OracleCommand(query, _oracleManager.GetConnection()))
+                    {
+                        command.Parameters.Add(":Id", id);
+                        command.ExecuteNonQuery();
+                    }
             }
             catch (Exception ex)
             {
-                // Handle exceptions (e.g., logging)
+                _logger.LogError(ex, "Error deleting login session.");
                 throw new Exception("Error deleting login session.", ex);
             }
         }
